@@ -559,15 +559,38 @@ builder.defineStreamHandler(async ({ type, id, config }) => {
     const shortLabel = SHORT_LABELS[episode.type] || "UNKNOWN";
 
     let description = config?.shortDescription ? `${emoji} ${shortLabel}` : label;
+    let episodePositions = new Map();
+    
+    try {
+      const baseMeta = await fetchBaseMeta("series", seriesId);
+    
+      if (baseMeta?.videos?.length) {
+        const { absolute } = await mapAbsoluteEpisodes(baseMeta, seriesId);
+    
+        for (const video of baseMeta.videos) {
+          const abs = absolute.get(video.id);
+          const season = Number(video.imdbSeason || video.season);
+          const ep = Number(video.imdbEpisode || video.episode);
+    
+          if (abs && season > 0 && ep > 0 && !episodePositions.has(abs)) {
+            episodePositions.set(abs, { season, episode: ep });
+          }
+        }
+      }
+    } catch (err) {
+      console.error("[STREAM] Season mapping:", err.message);
+    }
 
     if (episode.type === "filler" || episode.type === "mixed") {
       for (let n = epNum + 1; n <= fillerData.totalEpisodes; n++) {
         const candidate = fillerData.episodes[n];
         if (!candidate) break;
         if (candidate.type !== "filler") {
-          const nextLabel = config?.hideNextTitle
-            ? `Episode ${candidate.number}`
-            : (candidate.title || `Episode ${candidate.number}`);
+        const position = episodePositions.get(n);
+        
+        const nextLabel = position
+          ? `Staffel ${position.season}, Episode ${position.episode}`
+          : `Episode ${candidate.number}`;
           description += `\n🔎 Nächste Canon Episode: ${nextLabel}`;
           break;
         }
