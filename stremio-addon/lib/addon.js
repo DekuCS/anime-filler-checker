@@ -8,7 +8,7 @@ const {
 } = require("./fillerData");
 const { generateSubtitle, SHORT_LABELS } = require("./subtitles");
 const { kvGet, kvSet } = require("./kvCache");
-const { buildThumbUrl } = require("./thumbnails");
+const { buildThumbUrl, getEpisodeThumbnail } = require("./thumbnails");
 
 const fetch = require("node-fetch");
 
@@ -39,7 +39,7 @@ const META_ID_PREFIXES = META_UPSTREAM
 
 const manifest = {
   id: "community.animefiller",
-  version: "1.4.3",
+  version: "1.4.4",
   name: "Anime Filler Checker",
   description:
     "Detects filler, canon, mixed, and anime-canon episodes for anime series. " +
@@ -431,7 +431,6 @@ builder.defineMetaHandler(async ({ type, id, config }) => {
   }
   if (!fillerData || !fillerData.totalEpisodes) throw notFound("no filler data");
 
-  const fallbackImage = base.background || base.poster || null;
   let badged = 0;
   const videos = base.videos.map((v) => {
     const abs = absolute.get(v.id);
@@ -439,14 +438,16 @@ builder.defineMetaHandler(async ({ type, id, config }) => {
     if (!ep || !TYPE_EMOJI[ep.type] || ep.type === "unknown") return v;
     if (!shouldShowVerdict(config, ep.type)) return v;
     badged++;
-    return { ...v, thumbnail: buildThumbUrl(publicBaseUrl, ep.type, v.thumbnail || fallbackImage) };
+    const source = getEpisodeThumbnail(v, base, META_UPSTREAM);
+    const thumbnail = buildThumbUrl(publicBaseUrl, ep.type, source);
+    return thumbnail ? { ...v, thumbnail } : v;
   });
 
   if (!badged) throw notFound("no matching episodes");
 
   return {
     meta: { ...base, videos },
-    cacheMaxAge: 60 * 60 * 6,
+    cacheMaxAge: 60 * 5,
     staleRevalidate: 60 * 60 * 24,
     staleError: 60 * 60 * 24 * 7,
   };
