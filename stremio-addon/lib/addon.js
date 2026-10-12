@@ -519,11 +519,11 @@ builder.defineSubtitlesHandler(async ({ type, id, config }) => {
  * ═══════════════════════════════════════════════════ */
 
 const STREAM_LABELS = {
-  canon:      "✅ CANON — Manga faithful, safe to watch",
-  filler:     "⛔ FILLER — Not from the manga, safe to skip!",
-  mixed:      "⚠️ MIXED — Contains both canon and filler",
-  anime_canon:"🔵 ANIME CANON — Anime-original but plot-relevant",
-  unknown:    "❓ UNKNOWN — No filler data available",
+  canon:      "📝 Aus Manga adaptiert",
+  filler:     "📝 Nicht aus Manga, sicher zu überspringen",
+  mixed:      "📝 Gemischter Inhalt, lieber anschauen",
+  anime_canon:"📝 Plot relevant",
+  unknown:    "📝 Keine Daten abrufbar",
 };
 
 builder.defineStreamHandler(async ({ type, id, config }) => {
@@ -568,7 +568,7 @@ builder.defineStreamHandler(async ({ type, id, config }) => {
           const nextLabel = config?.hideNextTitle
             ? `Episode ${candidate.number}`
             : (candidate.title || `Episode ${candidate.number}`);
-          description += `\n▶ Next canon: ${nextLabel}`;
+          description += `\n🔎 Nächste Canon Episode: ${nextLabel}`;
           break;
         }
       }
